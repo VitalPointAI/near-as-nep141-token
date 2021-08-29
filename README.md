@@ -33,7 +33,7 @@ Exploring The Code
 ---------------
 
 - The "backend" code lives in the `/contract` folder.
-- `/contract/index.ts` is used to export the public accesible endpoints.
+- `/contract/index.ts` is used to export the public accessible endpoints.
 - Actual implementation code is splitted into the `/contract/nep/<standard-number>.ts` files
 - `/contract/misc/utils.ts` contains some helper methods.
 
