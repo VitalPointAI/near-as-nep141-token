@@ -1,0 +1,17 @@
+{
+  "name": "near-as-nep141-token",
+  "version": "1.0.0",
+  "license": "GPL3",
+  "private": true,
+  "scripts": {
+    "build": "asb",
+    "build:debug": "asb --target debug",
+    "test": "asp --nologo"
+  },
+  "dependencies": {
+    "near-sdk-as": "3.2.3"
+  },
+  "devDependencies": {
+    "shelljs": "^0.8.4"
+  }
+}
