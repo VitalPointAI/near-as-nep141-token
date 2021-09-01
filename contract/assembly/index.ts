@@ -9,11 +9,6 @@ export function init_token(metadata: FungibleTokenMetadata, max_supply: string):
     init_token_impl(metadata, max_supply);
 }
 
-//reset_token, only for test purposes
-export function reset_token(): void {
-    reset_token_impl();
-}
-
 //CORE NEP-141
 export function ft_transfer(receiver_id: string, amount: string, memo: string | null = null): void {
     ft_transfer_impl(context.predecessor, receiver_id, amount, memo);
