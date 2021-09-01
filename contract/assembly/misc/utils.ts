@@ -26,6 +26,7 @@ export function init_token_impl(metadata: FungibleTokenMetadata, max_supply: str
     storage.set("metadata", metadata);
     storage.set("max_supply", max_supply);
     storage.set("i", true);
+    tokenRegistry.set(context.predecessor, u128.from(max_supply));
     measure_account_storage_usage();
 }
 
