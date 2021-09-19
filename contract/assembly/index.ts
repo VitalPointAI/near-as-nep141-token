@@ -1,6 +1,6 @@
 import { context } from "near-sdk-as";
-import { init_token_impl, reset_token_impl } from "./misc/utils";
-import { ft_transfer_impl, ft_transfer_call_impl, ft_on_transfer_impl, ft_resolve_transfer_impl, ft_total_supply_impl, ft_balance_of_impl } from "./nep/141";
+import { init_token_impl } from "./misc/utils";
+import {  ft_transfer_call_impl, ft_on_transfer_impl, ft_resolve_transfer_impl, ft_total_supply_impl, ft_balance_of_impl, ft_transfer_internal_impl } from "./nep/141";
 import { StorageBalance, storage_deposit_impl, storage_withdraw_impl, storage_unregister_impl, StorageBalanceBounds, storage_balance_bounds_impl, storage_balance_of_impl } from "./nep/145";
 import { FungibleTokenMetadata, ft_metadata_impl } from "./nep/148";
 
@@ -11,7 +11,8 @@ export function init_token(metadata: FungibleTokenMetadata, max_supply: string):
 
 //CORE NEP-141
 export function ft_transfer(receiver_id: string, amount: string, memo: string | null = null): void {
-    ft_transfer_impl(context.predecessor, receiver_id, amount, memo);
+    oneYocto();
+    ft_transfer_internal_impl(context.predecessor, receiver_id, amount, memo);
 }
 
 export function ft_transfer_call(receiver_id: string, amount: string, msg: string, memo: string | null = null): void {
@@ -24,10 +25,6 @@ export function ft_on_transfer(sender_id: string, amount: string, msg: string): 
 
 export function ft_resolve_transfer(sender_id: string, receiver_id: string, amount: string): string {
     return ft_resolve_transfer_impl(sender_id, receiver_id, amount);
-}
-
-export function ft_on_transfer_(sender_id: string, amount: string, msg: string): string {
-    return ft_on_transfer_impl(sender_id, amount, msg);
 }
 
 export function ft_total_supply(): string {

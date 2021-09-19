@@ -8,7 +8,6 @@
     "dev:deploy:contract": "near dev-deploy",
     "deploy:contract": "near deploy",
     "build:deploy": "yarn build:contract && yarn deploy:contract",
-    "prestart": "npm run build:contract:debug && npm run dev:deploy:contract",
     "test": "npm run build:contract:debug && cd contract && npm run test && cd .. && jest test --runInBand",
     "testrunner": "set NEAR_RUNNER_NETWORK=testnet && jest --verbose"
   },

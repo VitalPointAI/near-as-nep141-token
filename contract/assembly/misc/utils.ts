@@ -12,7 +12,8 @@ export const ERR_INSUFFICIENT_BALANCE = 'Account does not have enough balance fo
 
 export type AccountId = string
 
-export const XCC_GAS: u64 = 30_000_000_000_000;
+export const XCC_GAS: u64 = 35_000_000_000_000;
+export const XCC_RESOLVE_GAS: u64 = 10_000_000_000_000;
 export const ONE_NEAR: u128 = u128.from("1000000000000000000000000");
 
 export function sendNear(recipient: string, amount: u128): void {

@@ -1,11 +1,11 @@
 import { u128, context, PersistentMap, logging, ContractPromise, env, storage } from "near-sdk-as";
-import { AccountId, ERR_INSUFFICIENT_BALANCE, ERR_INVALID_AMOUNT, XCC_GAS } from "../misc/utils";
+import { AccountId, ERR_INSUFFICIENT_BALANCE, ERR_INVALID_AMOUNT, XCC_GAS, XCC_RESOLVE_GAS } from "../misc/utils";
 
 
 export const tokenRegistry = new PersistentMap<AccountId, u128>('t');
 
-export function ft_transfer_impl(sender_id: string, receiver_id: string, amount: string, memo: string | null): void {
-
+export function ft_transfer_internal_impl(sender_id: string, receiver_id: string, amount: string, memo: string | null): void {
+    oneYocto();
     assert(env.isValidAccountID(receiver_id), "receiver_id not valid");
 
     const convertedAmount = u128.from(amount); //TODO Check if amount is a valid number
@@ -50,7 +50,7 @@ export function ft_transfer_call_impl(receiver_id: string, amount: string, msg: 
 
     const sender_id = context.predecessor;
 
-    ft_transfer_impl(sender_id, receiver_id, amount, memo);
+    ft_transfer_internal_impl(sender_id, receiver_id, amount, memo);
 
     ContractPromise.create<FTT_CALL>(
         receiver_id,
@@ -63,7 +63,7 @@ export function ft_transfer_call_impl(receiver_id: string, amount: string, msg: 
         {
             sender_id, receiver_id, amount
         },
-        XCC_GAS
+        XCC_RESOLVE_GAS
     ).returnAsResult();
 }
 
@@ -84,16 +84,24 @@ export function ft_resolve_transfer_impl(sender_id: string, receiver_id: string,
 
     if (results[0].failed) {
         logging.log("failed transaction, refund all");
-        ft_transfer_impl(receiver_id, sender_id, amount, null);
-        return amount;
+        ft_transfer_internal_impl(receiver_id, sender_id, amount, null);
+        return u128.Zero.toString();
     }
-    const unusedAmount = u128.from(results[0].decode<string>());
+    const amountConverted = u128.from(amount);
+    let unusedAmount = u128.from(results[0].decode<string>());
+   
+//rework: not handled when balance of user is too low to refund. Rust does that
     if (unusedAmount > u128.Zero) {
+        if (unusedAmount > amountConverted) { //if the foreign contract tries to refund too much, limit it
+            unusedAmount = amountConverted;
+        }
+        const usedAmount = u128.sub(amountConverted, unusedAmount).toString();
+
         logging.log("attached too much tokens, partial refund");
-        ft_transfer_impl(receiver_id, sender_id, unusedAmount.toString(), null);
-        return unusedAmount.toString();
+        ft_transfer_internal_impl(receiver_id, sender_id, unusedAmount.toString(), null);
+        return usedAmount;
     }
-    return u128.Zero.toString();
+    return amount;
 }
 
 
