@@ -1,12 +1,12 @@
 import { u128, context, PersistentMap, logging, ContractPromise, env, storage } from "near-sdk-as";
-import { AccountId, ERR_INSUFFICIENT_BALANCE, ERR_INVALID_AMOUNT, XCC_GAS, XCC_RESOLVE_GAS } from "../misc/utils";
+import { AccountId, ERR_INSUFFICIENT_BALANCE, ERR_INVALID_ACCOUNT, ERR_INVALID_AMOUNT, XCC_GAS, XCC_RESOLVE_GAS } from "../misc/utils";
 
 
 export const tokenRegistry = new PersistentMap<AccountId, u128>('t');
 
 export function ft_transfer_internal_impl(sender_id: string, receiver_id: string, amount: string, memo: string | null): void {
     oneYocto();
-    assert(env.isValidAccountID(receiver_id), "receiver_id not valid");
+    assert(env.isValidAccountID(receiver_id), ERR_INVALID_ACCOUNT);
 
     const convertedAmount = u128.from(amount); //TODO Check if amount is a valid number
 
@@ -47,9 +47,7 @@ export class FTT_CALLBACK {
 
 export function ft_transfer_call_impl(receiver_id: string, amount: string, msg: string, memo: string | null): void {
     oneYocto();
-
     const sender_id = context.predecessor;
-
     ft_transfer_internal_impl(sender_id, receiver_id, amount, memo);
 
     ContractPromise.create<FTT_CALL>(
@@ -73,37 +71,47 @@ export function ft_transfer_call_impl(receiver_id: string, amount: string, msg: 
 // number of unused tokens in string form. For instance, if `amount` is 10 but only 9 are
 // needed, it will return "1".
 export function ft_on_transfer_impl(sender_id: string, amount: string, msg: string): string {
-    throw "not implemented";
+    throw("not implemented");
 }
 
 export function ft_resolve_transfer_impl(sender_id: string, receiver_id: string, amount: string): string {
-
     const results = ContractPromise.getResults();
-    assert(results.length == 1, "This is a callback");
-    assert(context.predecessor == context.contractName, "callback");
-
+    assert(results.length == 1, "Cross contract chain should be 1");
+    assert(context.predecessor == context.contractName, "Method ft_resolve_transfer is private");
+    assert(!results[0].pending);
+    let unusedAmount = "0";
     if (results[0].failed) {
-        logging.log("failed transaction, refund all");
-        ft_transfer_internal_impl(receiver_id, sender_id, amount, null);
-        return u128.Zero.toString();
+        logging.log("Failed transaction, refund all");
+        unusedAmount = amount;
     }
-    const amountConverted = u128.from(amount);
-    let unusedAmount = u128.from(results[0].decode<string>());
-   
-//rework: not handled when balance of user is too low to refund. Rust does that
-    if (unusedAmount > u128.Zero) {
-        if (unusedAmount > amountConverted) { //if the foreign contract tries to refund too much, limit it
-            unusedAmount = amountConverted;
-        }
-        const usedAmount = u128.sub(amountConverted, unusedAmount).toString();
+    else {
+        unusedAmount = results[0].decode<string>(); //unused amount provided by on_transfer method
+    }
 
-        logging.log("attached too much tokens, partial refund");
-        ft_transfer_internal_impl(receiver_id, sender_id, unusedAmount.toString(), null);
+    const amountConverted = u128.from(amount);
+    let unusedAmountConverted = u128.from(unusedAmount);
+
+    if (unusedAmountConverted > u128.Zero) {
+        //check balance of receiver and get min value
+        const receiver_balance = tokenRegistry.get(receiver_id, u128.Zero)!;
+        if (u128.gt(unusedAmountConverted, receiver_balance)) {
+            unusedAmountConverted = receiver_balance; //can't refund more than total balance
+        }
+        const usedAmount = u128.sub(amountConverted, unusedAmountConverted).toString();
+
+        if (!tokenRegistry.contains(sender_id)) {
+            logging.log("Refund not possible, account deleted");
+            //todo reduce max supply
+        }
+        else {
+            logging.log("Attached too much tokens, refund");
+            ft_transfer_internal_impl(receiver_id, sender_id, unusedAmountConverted.toString(), null);
+
+        }
         return usedAmount;
     }
     return amount;
 }
-
 
 export function ft_total_supply_impl(): string {
     return storage.getSome<string>("max_supply");

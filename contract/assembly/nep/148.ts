@@ -8,9 +8,9 @@ export class FungibleTokenMetadata {
         public spec: string,
         public name: string,
         public symbol: string,
-        public icon: string,
-        public reference: string,
-        public reference_hash: string,
+        public icon: string | null,
+        public reference: string | null,
+        public reference_hash: string | null,
         public decimals: u8) {
     }
 }

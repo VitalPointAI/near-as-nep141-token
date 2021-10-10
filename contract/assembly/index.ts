@@ -1,6 +1,6 @@
 import { context } from "near-sdk-as";
 import { init_token_impl } from "./misc/utils";
-import {  ft_transfer_call_impl, ft_on_transfer_impl, ft_resolve_transfer_impl, ft_total_supply_impl, ft_balance_of_impl, ft_transfer_internal_impl } from "./nep/141";
+import { ft_transfer_call_impl, ft_on_transfer_impl, ft_resolve_transfer_impl, ft_total_supply_impl, ft_balance_of_impl, ft_transfer_internal_impl } from "./nep/141";
 import { StorageBalance, storage_deposit_impl, storage_withdraw_impl, storage_unregister_impl, StorageBalanceBounds, storage_balance_bounds_impl, storage_balance_of_impl } from "./nep/145";
 import { FungibleTokenMetadata, ft_metadata_impl } from "./nep/148";
 
