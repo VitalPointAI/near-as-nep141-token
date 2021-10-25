@@ -41,9 +41,8 @@ Open Tasks
 ---------------
 
 - [ ] Implementing spec and testrunner tests
-- [ ] Adding informations about actions to display token in wallet
-- [ ] Collection with some example calls to use the contract
-- [ ] Migration to class based approach and npm package
+- [ ] Fix ft_transfer_call
+
 
 Further Documents
 ---------------
