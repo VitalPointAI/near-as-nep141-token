@@ -1,4 +1,4 @@
-near-as-nep141-token
+near-as-nep141-token (WIP, community project)
 ==================
 
 This project contains an example implementation of the NEAR Fungible Token Standard, consisting of:
